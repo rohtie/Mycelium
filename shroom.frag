@@ -55,6 +55,7 @@ Material hatDotsMaterial = Material(
     vec3(0.35),
     vec3(1.0)
 );
+Material dropMaterial = defaultMaterial;
 
 float smin( float a, float b, float k ) {
     float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
@@ -141,9 +142,32 @@ float hatDots(vec3 p) {
     return dots;
 }
 
+float drop(vec3 p) {
+    p.y -= 4;
+    p.y += mod(iGlobalTime * 5.0, 4.0);
+
+    p.z -= sin(iGlobalTime) * 0.25;
+    p.x -= cos(iGlobalTime) * 0.25;
+
+
+    float drop = length(p) - 0.15;
+    p.y -= 0.37;
+    drop = smin(drop, length(p) - 0.01, 0.4);
+
+    return drop;
+}
+
 float map(vec3 p) {
     float map = min(min(hat(p), stem(p)), min(ground(p), hatDots(p)));
-    return max(map, p.y + 0.75 - abs(sin(iGlobalTime * 0.25)) * 3.25);
+
+    // Cool woosh effect
+    map = smin(mod(iGlobalTime, 1.0), map, 0.5);
+
+    map = max(map, p.y + 0.75 - abs(sin(iGlobalTime * 0.25)) * 3.25);
+
+    map = smin(drop(p), map, 0.5);
+
+    return map;
 }
 
 bool isSameDistance(float distanceA, float distanceB, float eps) {
@@ -168,6 +192,9 @@ Material getMaterial(vec3 p) {
     }
     else if (isSameDistance(distance, hatDots(p))) {
         return hatDotsMaterial;
+    }
+    else if (isSameDistance(distance, drop(p))) {
+        return dropMaterial;
     }
     else {
         return defaultMaterial;
