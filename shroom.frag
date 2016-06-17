@@ -142,7 +142,8 @@ float hatDots(vec3 p) {
 }
 
 float map(vec3 p) {
-    return min(min(hat(p), stem(p)), min(ground(p), hatDots(p)));
+    float map = min(min(hat(p), stem(p)), min(ground(p), hatDots(p)));
+    return max(map, p.y + 0.75 - abs(sin(iGlobalTime * 0.25)) * 3.25);
 }
 
 bool isSameDistance(float distanceA, float distanceB, float eps) {
@@ -236,9 +237,11 @@ void mainImage (out vec4 color, in vec2 p) {
 
     float distance = intersect(cameraPosition, rayDirection);
 
-    vec3 col = vec3(0.0);
+    vec3 col = vec3(0.05, 0.05, 0.15);
 
     if (distance > 0.0) {
+        col = vec3(0.0);
+
         vec3 p = cameraPosition + rayDirection * distance;
         vec3 normal = getNormal(p);
         Material material = getMaterial(p);
