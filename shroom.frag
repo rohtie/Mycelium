@@ -103,6 +103,7 @@ float stem(vec3 p) {
 
 float hat(vec3 p) {
     p.y -= 2.0;
+
     p.z -= sin(iGlobalTime) * 0.25;
     p.x -= cos(iGlobalTime) * 0.25;
 
@@ -142,9 +143,19 @@ float hatDots(vec3 p) {
     return dots;
 }
 
+float shroomPartition() {
+    float t = mod(iGlobalTime * 0.25, 5.0);
+    t /= 5.0;
+    t /= 0.05;
+    t = floor(t) / 16.0;
+
+    return t;
+}
+
 float drop(vec3 p) {
-    p.y -= 4;
-    p.y += mod(iGlobalTime * 5.0, 4.0);
+    p.y -= 4.0;
+    p.y -= shroomPartition() * 3.25;
+    p.y += mod(iGlobalTime * 5.0, 5.0);
 
     p.z -= sin(iGlobalTime) * 0.25;
     p.x -= cos(iGlobalTime) * 0.25;
@@ -163,7 +174,7 @@ float map(vec3 p) {
     // Cool woosh effect
     map = smin(mod(iGlobalTime, 1.0), map, 0.5);
 
-    map = max(map, p.y + 0.75 - abs(sin(iGlobalTime * 0.25)) * 3.25);
+    map = max(map, p.y + 0.75 - shroomPartition() * 3.25);
 
     map = smin(drop(p), map, 0.5);
 
@@ -254,9 +265,11 @@ void mainImage (out vec4 color, in vec2 p) {
     vec3 cameraPosition = vec3(0.0, 0.5, 3.0);
     vec3 rayDirection = normalize(vec3(p, -1.0));
 
+    float b = 1.25 + sin(iGlobalTime) * 0.25;
+    rayDirection.zy *= rotate(b);
+    cameraPosition.zy *= rotate(b);
 
-    float a = sin(iGlobalTime * 0.5);
-
+    float a = 3.14 + sin(iGlobalTime * 0.5);
     rayDirection.xz *= rotate(a);
     cameraPosition.xz *= rotate(a);
 
