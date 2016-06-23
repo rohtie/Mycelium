@@ -57,7 +57,7 @@ Material hatDotsMaterial = Material(
 );
 Material dropMaterial = defaultMaterial;
 
-float smin( float a, float b, float k ) {
+float smin(float a, float b, float k) {
     float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
     return mix( b, a, h ) - k*h*(1.0-h);
 }
@@ -73,7 +73,7 @@ vec3 triPlanar(sampler2D tex, vec3 normal, vec3 p) {
     return blend.x * cX + blend.y * cY + blend.z * cZ;
 }
 
-float capsule ( vec3 p, vec3 a, vec3 b, float r ) {
+float capsule (vec3 p, vec3 a, vec3 b, float r) {
     vec3 pa = p - a, ba = b - a;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
     return length( pa - ba*h ) - r;
