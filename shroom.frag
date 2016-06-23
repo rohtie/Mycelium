@@ -172,7 +172,7 @@ float map(vec3 p) {
     float map = min(min(hat(p), stem(p)), min(ground(p), hatDots(p)));
 
     // Cool woosh effect
-    map = smin(mod(iGlobalTime, 1.0), map, 0.5);
+    // map = smin(mod(iGlobalTime, 1.0), map, 0.5);
 
     map = max(map, p.y + 0.75 - shroomPartition() * 3.25);
 
@@ -255,6 +255,41 @@ mat2 rotate(float a) {
                cos(a), sin(a));
 }
 
+float hash(float n) {
+    return fract(sin(n)*43758.5453);
+}
+
+float render2D(vec2 p) {
+    float time = iGlobalTime + 10.0;
+
+    float a = 1.26;
+    p *= mat2(-sin(a), cos(a),
+              cos(a), sin(a));
+
+    float result = 0.0;
+
+    float seed = 95.0;
+
+    float movement = mod(iGlobalTime * 0.25, 1.0) * 5.0;
+
+    for (float i = 0.0 + seed; i < 100.0 + seed; i += 2.0) {
+        vec2 circleLocation = vec2(hash(i), hash(i + 1.0)) - 0.5;
+        circleLocation *= 2.0;
+
+        circleLocation.x *= 3.0;
+        circleLocation.y *= 2.0;
+
+        circleLocation.x += 0.3 * sin(time * hash(i * 5.0));
+        circleLocation.y += 0.2 * sin(time * hash(i * 6.0));
+
+        float size = hash(i * 100.0) * 0.05;
+
+        result += smoothstep(size + 0.01, size, length(p - circleLocation));
+    }
+
+    return result;
+}
+
 vec3 light = normalize(vec3(10.0, 20.0, 2.0));
 
 void mainImage (out vec4 color, in vec2 p) {
@@ -278,6 +313,8 @@ void mainImage (out vec4 color, in vec2 p) {
     float distance = intersect(cameraPosition, rayDirection);
 
     vec3 col = vec3(0.05, 0.05, 0.15);
+    col += render2D(p) * vec3(0.1, 0.2, 0.05) * 0.5;
+    col += (1.0 - length(p)) * 0.1;
 
     if (distance > 0.0) {
         col = vec3(0.0);
