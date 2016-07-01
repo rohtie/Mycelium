@@ -79,6 +79,10 @@ float capsule (vec3 p, vec3 a, vec3 b, float r) {
     return length( pa - ba*h ) - r;
 }
 
+vec3 repeat(vec3 p, vec3 c) {
+    return mod(p,c)-0.5*c;
+}
+
 float ground(vec3 p) {
     p.y = abs(p.y);
 
@@ -122,6 +126,9 @@ float hat(vec3 p) {
 
     hat += dots * 0.35;
 
+    vec3 q = repeat(p, vec3(0.05));
+    hat = smin(hat, max(hat, length(q) - 0.0001), 0.035);
+
     return hat;
 }
 
@@ -133,8 +140,12 @@ float hatDots(vec3 p) {
 
     p.y -= 1.75;
 
+    p.z -= sin(iGlobalTime) * 0.25;
+    p.x -= cos(iGlobalTime) * 0.25;
+
     vec3 c = vec3(0.25);
     p = mod(p, c) - c*0.5;
+
 
     float dots = length(p) - 0.05;
 
@@ -144,6 +155,8 @@ float hatDots(vec3 p) {
 }
 
 float shroomPartition() {
+    return 1.0;
+
     float t = mod(iGlobalTime * 0.25, 5.0);
     t /= 5.0;
     t /= 0.05;
