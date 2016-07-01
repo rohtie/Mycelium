@@ -30,7 +30,7 @@ Material defaultMaterial = Material(
     vec3(2.7, 1.0, 0.95),
     vec3(1.0)
 );
-Material stemMaterial = Material(
+Material dirtMaterial = Material(
     vec3(2.45, 0.71, 0.15),
     vec3(4.7, 4.0, 0.95),
     vec3(1.0)
@@ -148,7 +148,7 @@ bool isSameDistance(float distanceA, float distanceB) {
 Material getMaterial(vec3 p) {
     float distance = map(p);
     if (isSameDistance(distance, dirt(p), 0.25)) {
-        return stemMaterial;
+        return dirtMaterial;
     }
     return defaultMaterial;
 
