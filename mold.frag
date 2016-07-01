@@ -31,9 +31,9 @@ Material defaultMaterial = Material(
     vec3(1.0)
 );
 Material groundMaterial = Material(
-    vec3(0.0, 1.0, 0.0),
-    vec3(3.0, 1.25, 0.75),
-    vec3(1.0)
+    vec3(3.25, 0.71, 0.15) * 0.45,
+    vec3(4.7, 5.75, 0.95) * 0.15,
+    vec3(1.0, 5.0, 1.0) * 0.25
 );
 
 float smin(float a, float b, float k) {
@@ -142,7 +142,9 @@ float shrooms(vec3 p) {
     // Very interesting ghost effect
     // return shrooms + mod(iGlobalTime, 1.0);
 
-    return shrooms - smoothstep(0.0, 1.0, sin(iGlobalTime)) * 0.05;
+    shrooms = shrooms - smoothstep(0.0, 1.0, sin(iGlobalTime)) * 0.05;
+
+    return shrooms;
 }
 
 float ground(vec3 p) {
@@ -154,6 +156,9 @@ float ground(vec3 p) {
 
     // Cool transition between states
     // b = mix(a, b, sin(iGlobalTime * 10.0) * 0.5 + 0.75);
+
+    vec3 q = repeat(p, vec3(0.01));
+    b = smin(b, max(b, length(q) - 0.0001), 0.01);
 
     return b;
 }
@@ -173,13 +178,11 @@ bool isSameDistance(float distanceA, float distanceB) {
 }
 
 Material getMaterial(vec3 p) {
-    return defaultMaterial;
-
     float distance = map(p);
-
-    if (isSameDistance(distance, map(p))) {
-        return defaultMaterial;
+    if (isSameDistance(distance, ground(p), 0.01)) {
+        return groundMaterial;
     }
+    return defaultMaterial;
 }
 
 vec3 getNormal(vec3 p) {

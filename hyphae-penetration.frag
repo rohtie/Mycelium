@@ -151,8 +151,6 @@ Material getMaterial(vec3 p) {
         return dirtMaterial;
     }
     return defaultMaterial;
-
-
 }
 
 vec3 getNormal(vec3 p) {
