@@ -155,8 +155,6 @@ float hatDots(vec3 p) {
 }
 
 float shroomPartition() {
-    return 1.0;
-
     float t = mod(iGlobalTime * 0.25, 5.0);
     t /= 5.0;
     t /= 0.05;
