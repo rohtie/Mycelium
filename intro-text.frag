@@ -184,7 +184,7 @@ float rohtie(vec2 p) {
     float result = 10000.0;
 
     result = min(result, r(p - vec2(0.05, 0.0)));
-    result = min(result, o(p - vec2(0.625, -0.075)));
+    result = min(result, o(p - vec2(0.65, -0.075)));
     result = min(result, h(p - vec2(0.05, 0.0)));
     result = min(result, t(p - vec2(0.0, 0.0)));
     result = min(result, i(p - vec2(2.25, -0.125)));
@@ -228,9 +228,11 @@ void mainImage( out vec4 o, in vec2 p ) {
     p -= 0.5;
     p.x *= iResolution.x / iResolution.y;
 
-    float time = mod(iGlobalTime * 0.5, 4.0);
+    float time = mod(iGlobalTime * 0.25, 4.0);
 
     float result = 0.0;
+
+    float blank = length(p);
 
     float a, b;
 
@@ -239,7 +241,7 @@ void mainImage( out vec4 o, in vec2 p ) {
     float rohtie = rohtie(p - vec2(-0.75, 0.0));
 
     if (time < 1.0) {
-        a = 0.0;
+        a = blank;
         b = mycelium;
     }
     else if (time < 2.0) {
@@ -252,7 +254,7 @@ void mainImage( out vec4 o, in vec2 p ) {
     }
     else {
         a = rohtie;
-        b = 0.0;
+        b = blank;
     }
 
     result = 1.0 - mix(a, b, mod(time, 1.0));
