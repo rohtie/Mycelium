@@ -81,9 +81,9 @@ float o(vec2 p) {
 
 float h(vec2 p) {
     float result = 10000.0;
-    result = min(result, rect(p - vec2(1.1, 0.0), vec2(0.25, 0.75)));
-    result = min(result, rightHalfCircle(p - vec2(1.24, -0.3), 0.25));
-    result = min(result, rect(p - vec2(1.3675, -0.44), vec2(0.2475, 0.25)));
+    result = min(result, rect(p - vec2(1.1, 0.025), vec2(0.25, 0.8)));
+    result = min(result, rightHalfCircle(p - vec2(1.24, -0.15), 0.25));
+    result = min(result, rect(p - vec2(1.3675, -0.34), vec2(0.2475, 0.45)));
     return result;
 }
 
