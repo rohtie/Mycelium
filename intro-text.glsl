@@ -246,7 +246,7 @@ void mainImage( out vec4 o, in vec2 p ) {
 
     float result = text(p);
 
-    o.rgb += (
+    o.rgb = (
         result * vec3(0.15 + abs(p.x), 0.75 + p.y, (1.0 + p.y) * 0.5)
         + (1.0 - result) * vec3((0.75 + p.y) * 0.6, 0.0, abs(p.x) * 0.25)
         + length(p) * vec3(0.75, 0.25, 1.0) * 0.15
@@ -254,6 +254,6 @@ void mainImage( out vec4 o, in vec2 p ) {
 
     o.rgb += text(p) * 0.4;
 
-    p.x += texture2D(iChannel0, (p.yy + 0.25) / 1.5).r;
+    p.x += texture(iChannel0, (p.yy + 0.25) / 1.5).r;
     o.r += text(p);
 }

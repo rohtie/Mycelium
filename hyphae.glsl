@@ -16,9 +16,9 @@ float smin(float a, float b, float k) {
 }
 
 vec3 triPlanar(sampler2D tex, vec3 normal, vec3 p) {
-    vec3 cX = texture2D(tex, p.yz).rgb;
-    vec3 cY = texture2D(tex, p.xz).rgb;
-    vec3 cZ = texture2D(tex, p.xy).rgb;
+    vec3 cX = texture(tex, p.yz).rgb;
+    vec3 cY = texture(tex, p.xz).rgb;
+    vec3 cZ = texture(tex, p.xy).rgb;
 
     vec3 blend = abs(normal);
     blend /= blend.x + blend.y + blend.z + 0.001;
