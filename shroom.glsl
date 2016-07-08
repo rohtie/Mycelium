@@ -1,29 +1,3 @@
-#version 120
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-#define iResolution u_resolution
-#define iChannel0 u_tex0
-#define iChannel1 u_tex0
-#define iChannel2 u_tex0
-#define iChannel3 u_tex0
-#define iGlobalTime u_time
-
-
-uniform vec2 u_mouse;
-uniform vec2 iResolution;
-uniform float iGlobalTime;
-
-uniform sampler2D iChannel0;
-uniform vec2 u_tex0Resolution;
-
-varying vec4 v_position;
-varying vec4 v_color;
-varying vec3 v_normal;
-varying vec2 v_texcoord;
-
 struct Material {
     vec3 ambient;
     vec3 diffuse;
@@ -347,13 +321,4 @@ void mainImage (out vec4 color, in vec2 p) {
     }
 
     color.rgb = col;
-}
-
-void main() {
-    vec4 col = vec4(1.0);
-
-    vec2 p = gl_FragCoord.xy;
-
-    mainImage(col, p);
-    gl_FragColor = vec4(col.rgb, 1.0);
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<clip src="intro-text" start="0" length="1188" time="0">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="hyphae" start="1188" length="226" time="-0.25">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="hyphae-penetration" start="1414" length="247" time="0">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="mold" start="1661" length="359" time="0">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="grow-shrooms" start="2020" length="778" time="33.5333328">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="shroom" start="2798" length="917" time="46.5333328">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>

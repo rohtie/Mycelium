@@ -1,24 +1,3 @@
-#version 120
-
-#define iResolution u_resolution
-#define iChannel0 u_tex0
-#define iChannel1 u_tex0
-#define iChannel2 u_tex0
-#define iChannel3 u_tex0
-#define iGlobalTime u_time
-
-uniform vec2 u_mouse;
-uniform vec2 iResolution;
-uniform float iGlobalTime;
-
-uniform sampler2D iChannel0;
-uniform vec2 u_tex0Resolution;
-
-varying vec4 v_position;
-varying vec4 v_color;
-varying vec3 v_normal;
-varying vec2 v_texcoord;
-
 float circle(vec2 p, float radius, float softness) {
     float result = length(p);
     result = smoothstep(radius, radius + softness, result);
@@ -223,13 +202,8 @@ float by(vec2 p) {
     return result;
 }
 
-void mainImage( out vec4 o, in vec2 p ) {
-    p /= iResolution.xy;
-    p -= 0.5;
-    p.x *= iResolution.x / iResolution.y;
-
-    float time = mod(iGlobalTime * 0.25, 4.0);
-
+float text(vec2 p) {
+    float time = mod(iGlobalTime * 0.25, 6.0);
     float result = 0.0;
 
     float blank = length(p);
@@ -239,6 +213,8 @@ void mainImage( out vec4 o, in vec2 p ) {
     float mycelium = mycelium(p  - vec2(0.0, 0.05));
     float by = by(p);
     float rohtie = rohtie(p - vec2(-0.75, 0.0));
+
+    float mixTime = mod(time, 1.0);
 
     if (time < 1.0) {
         a = blank;
@@ -252,25 +228,32 @@ void mainImage( out vec4 o, in vec2 p ) {
         a = by;
         b = rohtie;
     }
-    else {
+    else if (time < 5.0) {
+        mixTime = mod(time, 3.0);
         a = rohtie;
         b = blank;
     }
 
-    result = 1.0 - mix(a, b, mod(time, 1.0));
+    result = 1.0 - mix(a, b, mixTime);
+
+    return result;
+}
+
+void mainImage( out vec4 o, in vec2 p ) {
+    p /= iResolution.xy;
+    p -= 0.5;
+    p.x *= iResolution.x / iResolution.y;
+
+    float result = text(p);
 
     o.rgb += (
         result * vec3(0.15 + abs(p.x), 0.75 + p.y, (1.0 + p.y) * 0.5)
         + (1.0 - result) * vec3((0.75 + p.y) * 0.6, 0.0, abs(p.x) * 0.25)
         + length(p) * vec3(0.75, 0.25, 1.0) * 0.15
     );
-}
 
-void main() {
-    vec4 col = vec4(1.0);
+    o.rgb += text(p) * 0.4;
 
-    vec2 p = gl_FragCoord.xy;
-
-    mainImage(col, p);
-    gl_FragColor = vec4(col.rgb, 1.0);
+    p.x += texture2D(iChannel0, (p.yy + 0.25) / 1.5).r;
+    o.r += text(p);
 }
