@@ -9,6 +9,11 @@ Material defaultMaterial = Material(
     vec3(2.7, 1.0, 0.95),
     vec3(1.0)
 );
+Material groundMaterial = Material(
+    vec3(3.25, 0.71, 0.15) * 0.45,
+    vec3(4.7, 5.75, 0.95) * 0.15,
+    vec3(1.0, 5.0, 1.0) * 0.25
+);
 
 float smin(float a, float b, float k) {
     float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
@@ -52,6 +57,28 @@ float noise(vec3 x) {
                    mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 
+vec3 triPlanarNoise(vec3 normal, vec3 p) {
+    vec3 cX = vec3(noise(vec3(p.yz, 0.0)), 0.0, 0.0);
+    vec3 cY = vec3(0.0, noise(vec3(p.xz, 0.0)), 0.0);
+    vec3 cZ = vec3(0.0, 0.0, noise(vec3(p.xy, 0.0)));
+
+    vec3 blend = abs(normal);
+    blend /= blend.x + blend.y + blend.z + 0.001;
+
+    return blend.x * cX + blend.y * cY + blend.z * cZ;
+}
+
+vec3 triPlanarHash(vec3 normal, vec3 p) {
+    vec3 cX = vec3(hash3(p.y * p.z));
+    vec3 cY = vec3(hash3(p.x * p.z));
+    vec3 cZ = vec3(hash3(p.x * p.y));
+
+    vec3 blend = abs(normal);
+    blend /= blend.x + blend.y + blend.z + 0.001;
+
+    return blend.x * cX + blend.y * cY + blend.z * cZ;
+}
+
 float capsule(vec3 p, vec3 a, vec3 b, float r) {
     vec3 pa = p - a, ba = b - a;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
@@ -70,45 +97,55 @@ vec3 repeat(vec3 p, vec3 c) {
     return mod(p,c)-0.5*c;
 }
 
-vec2 solve(vec2 p, float upperLimbLength, float lowerLimbLength) {
-    vec2 q = p * (0.5 + 0.5 * (upperLimbLength * upperLimbLength - lowerLimbLength * lowerLimbLength) / dot(p, p));
-
-    float s = upperLimbLength * upperLimbLength / dot(q, q) - 1.0;
-
-    if (s < 0.0) {
-        return vec2(-100.0);
-    }
-
-    return q + q.yx * vec2(-1.0, 1.0) * sqrt(s);
+float dirtExtensions(vec3 p) {
+    p = repeat(p, vec3(1.0));
+    return length(p) - 1.0;
 }
 
-float finger(vec3 p, vec3 target) {
-    vec2 height = solve(target.xy, 2.0, 1.65);
-    float depth = solve(target.xz, 2.0, 1.65).y;
+float dirt(vec3 p) {
+    p.x -= 0.1;
 
-    vec3 joint = vec3(height, depth);
+    float dirt = max(length(p) - 6.0, p.x);
+    return smin(dirt, max(dirt, dirtExtensions(p) + 0.7) - 0.15, 0.5);
+}
 
-    float finger = smin(
-        capsule(p, vec3(0.0, 0.0, 0.0), joint, 0.25 + length(p - joint) * 0.25),
-        capsule(p, joint, target, 0.25 + length(p - target) * 0.1),
-        0.25);
+float groundTexture(vec3 p) {
+    p = repeat(p, vec3(0.1));
 
-    // finger = smin(finger, capsule)
+    float groundTexture = max(abs(p.x), max(abs(p.y), abs(p.z))) - 0.025;
+    return groundTexture;
+}
 
-    return finger;
+float ground(vec3 p) {
+    float ground = smin(max(p.y, length(p - vec3(0.0, -3.75, 0.0)) - 4.5), length(p - vec3(0.0, -0.25, 0.0)) - 1.0, 0.75);
+
+    float a = max(ground - 0.2, groundTexture(p));
+
+    float b = smin(ground, max(ground - 0.01, groundTexture(p)), 0.1);
+
+    // Cool transition between states
+    b  = mix(a, b, sin(iGlobalTime * 10.0 + 1.23) * 0.5 + 0.75);
+
+    vec3 q = repeat(p, vec3(0.01));
+    b = smin(b, max(b, length(q) - 0.0001), 0.01);
+
+    return b;
+}
+
+float shrooms(vec3 p) {
+    float shrooms = mix(dirt(p), ground(p),  mod(iGlobalTime * 0.29284, 1.0));
+
+    if (mod(iGlobalTime * 0.29284, 1.0) < 0.82) {
+        shrooms += mod(iGlobalTime * 0.29284, 1.0) * 0.075;
+    }
+
+    shrooms = mix(smin(shrooms, max(shrooms - 0.01, groundTexture(p)), 0.01), shrooms, mod(iGlobalTime * 0.29284, 1.0));
+
+    return shrooms;
 }
 
 float map(vec3 p) {
-    float result = p.y;
-    // result = 1000.0;
-
-    result = smin(result, finger(p - vec3(0.0, 2.0, 0.0), vec3(
-        2.0 - mod(iGlobalTime, 2.0) * 0.75,
-        -1.5,
-        2.0
-    )), 0.25);
-
-    return result;
+    return shrooms(p);
 }
 
 bool isSameDistance(float distanceA, float distanceB, float eps) {
@@ -120,11 +157,11 @@ bool isSameDistance(float distanceA, float distanceB) {
 }
 
 Material getMaterial(vec3 p) {
+    float distance = map(p);
+    if (isSameDistance(distance, shrooms(p), 0.01)) {
+        return groundMaterial;
+    }
     return defaultMaterial;
-    // float distance = map(p);
-    // if (isSameDistance(distance, dirt(p), 0.25)) {
-    //     return dirtMaterial;
-    // }
 }
 
 vec3 getNormal(vec3 p) {
@@ -174,16 +211,18 @@ float render2D(vec2 p) {
 
     float result = 0.0;
 
-    float seed = 95.0;
+    float seed = 205.0;
 
+    float movement = mod(iGlobalTime * 0.25, 1.0) * 5.0;
 
     for (float i = 0.0 + seed; i < 100.0 + seed; i += 2.0) {
         vec2 circleLocation = vec2(hash(i), hash(i + 1.0)) - 0.5;
-        circleLocation *= 2.0;
 
-        circleLocation.x *= 3.0 + sin(hash(i) + iGlobalTime * 2.0);
-        circleLocation.y *= 2.0 + sin(hash(i) + iGlobalTime * 2.0);
+        circleLocation.x *= 3.0;
+        circleLocation.y *= 2.0;
 
+        circleLocation.x += 0.3 * sin(time * hash(i * 5.0));
+        circleLocation.y += 0.2 * sin(time * hash(i * 6.0));
 
         float size = hash(i * 100.0) * 0.05;
 
@@ -200,17 +239,26 @@ void mainImage (out vec4 color, in vec2 p) {
     p = 2.0 * p - 1.0;
     p.x *= iResolution.x / iResolution.y;
 
-    vec3 cameraPosition = vec3(0.0, 2.0, 5.0);
-    vec3 rayDirection = normalize(vec3(p, -1.0));
+    vec3 cameraPositionA = vec3(0.5, 0.5, 3.0);
+    vec3 rayDirectionA = normalize(vec3(p, -1.0));
 
-    float b = 3.14 * 2.0 - 0.5;
-    // rayDirection.zy *= rotate(b);
-    // cameraPosition.zy *= rotate(b);
-    // rayDirection.zy *= rotate(b + sin(iGlobalTime * 0.25));
-    // cameraPosition.zy *= rotate(b + sin(iGlobalTime * 0.25));
+    mat2 rotation = rotate(1.75 + sin(iGlobalTime) * 0.25);
+    rayDirectionA.xz *= rotation;
+    cameraPositionA.xz *= rotation;
 
-    // rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
-    // cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
+
+    vec3 cameraPositionB = vec3(0.0, 0.5, 10.0);
+    vec3 rayDirectionB = normalize(vec3(p, -1.0));
+
+    float b = 1.25;
+    rayDirectionB.zy *= rotate(b + sin(iGlobalTime * 0.25) * 0.1);
+    cameraPositionB.zy *= rotate(b + sin(iGlobalTime * 0.25) * 0.1);
+
+    rayDirectionB.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25) * 0.1);
+    cameraPositionB.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25) * 0.1);
+
+    vec3 cameraPosition = mix(cameraPositionB, cameraPositionA, mod(iGlobalTime * 0.29284, 1.0));
+    vec3 rayDirection = mix(rayDirectionB, rayDirectionA, mod(iGlobalTime * 0.29284, 1.0));
 
     float distance = intersect(cameraPosition, rayDirection);
 
@@ -231,8 +279,7 @@ void mainImage (out vec4 color, in vec2 p) {
         vec3 halfVector = normalize(light + normal);
         col += material.specular * pow(max(dot(normal, halfVector), 0.0), 1024.0);
 
-        float attDistance = 10.0;
-        float att = clamp(1.0 - length(light - p) / attDistance, 0.0, 1.0); att *= att;
+        float att = clamp(1.0 - length(light - p) / mix(10.0, 5.0, mod(iGlobalTime * 0.29284, 1.0)), 0.0, 1.0); att *= att;
         col *= att;
 
         col *= vec3(smoothstep(0.25, 0.75, map(p + light))) + 0.5;

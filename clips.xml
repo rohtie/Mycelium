@@ -5,31 +5,43 @@
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="hyphae" start="1188" length="226" time="-0.25">
+<clip src="hyphae" start="1188" length="235" time="-0.25">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="hyphae-penetration" start="1414" length="247" time="0">
+<clip src="hyphae-penetration" start="1423" length="592" time="3.66666675">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="mold" start="1661" length="359" time="0">
+<clip src="hyphae-penetration-to-mold" start="2015" length="203" time="6.24999952">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="grow-shrooms" start="2020" length="778" time="33.5333328">
+<clip src="mold" start="2218" length="418" time="0">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="shroom" start="2798" length="917" time="46.5333328">
+<clip src="grow-shrooms" start="2636" length="946" time="43.9166641">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="shroom" start="3582" length="1106" time="59.5666656">
+	<iChannel src="sound" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+	<iChannel src="" filter="" />
+</clip>
+<clip src="pickup" start="4688" length="1252" time="0">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
