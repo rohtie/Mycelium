@@ -82,9 +82,15 @@ vec2 solve(vec2 p, float upperLimbLength, float lowerLimbLength) {
     return q + q.yx * vec2(-1.0, 1.0) * sqrt(s);
 }
 
-float finger(vec3 p, vec3 target) {
-    vec2 height = solve(target.xy, 2.0, 1.65);
-    float depth = solve(target.xz, 2.0, 1.65).y;
+float finger(vec3 p, vec3 target, float fingerLength) {
+    float firstJointLength = 2.0 * fingerLength;
+    float secondJointLength = 1.65 * fingerLength;
+
+    vec2 height = solve(target.xy, firstJointLength, secondJointLength);
+    float depth = solve(target.xz, firstJointLength, secondJointLength).y;
+    depth = 0.0;
+
+    target.z = 0.0;
 
     vec3 joint = vec3(height, depth);
 
@@ -93,20 +99,77 @@ float finger(vec3 p, vec3 target) {
         capsule(p, joint, target, 0.25 + length(p - target) * 0.1),
         0.25);
 
-    // finger = smin(finger, capsule)
+    vec3 lastFingerJoint = target - normalize(target) * 0.75 + normalize(target - joint);
 
-    return finger;
+    finger = smin(
+        finger,
+        capsule(
+            p,
+            target,
+            lastFingerJoint,
+            0.25 + length(p - target) * 0.1),
+        0.25);
+
+    return finger - 0.05;
 }
 
 float map(vec3 p) {
-    float result = p.y;
-    // result = 1000.0;
+    float result = p.y + 1.5;
 
-    result = smin(result, finger(p - vec3(0.0, 2.0, 0.0), vec3(
-        2.0 - mod(iGlobalTime, 2.0) * 0.75,
-        -1.5,
+/*    result = min(result, finger(p - vec3(-0.5, 2.0, 0.0), vec3(
+        0.5,
+        -1.25,
         2.0
-    )), 0.25);
+    )));
+    result = min(result, finger(p - vec3(-0.25, 3.5, 0.0), vec3(
+        0.5,
+        -1.55,
+        2.0
+    )));
+    result = min(result, finger(p - vec3(0.0, 5.0, 0.0), vec3(
+        1.5 - mod(iGlobalTime * 2.0, 4.0) * 0.25,
+        -1.75,
+        2.75
+    )));
+    result = min(result, finger(p - vec3(0.0, 6.5, -0.25), vec3(
+        1.5 - mod(iGlobalTime, 2.0) * 0.5,
+        -1.75,
+        2.0
+    )));*/
+
+    // p.yz *= rotate(-abs(sin(iGlobalTime * 0.1)) * 3.14);
+
+
+    vec3 d = p;
+    d.zy *= rotate(3.1);
+    result = smin(result, finger(d - vec3(0.0, 0.0, -6.0),
+        mix(vec3(-4.3, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        1.2
+    ), 0.25);
+
+    vec3 c = p;
+    c.zy *= rotate(2.85);
+    result = smin(result, finger(c - vec3(0.0, 0.0, -4.0),
+        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        1.35
+    ), 0.25);
+
+    vec3 b = p;
+    b.zy *= rotate(2.75);
+    result = smin(result, finger(b - vec3(0.0, 0.0, -2.0),
+        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        1.25
+    ), 0.25);
+
+    vec3 a = p;
+    a.zy *= rotate(2.5);
+    result = smin(result, finger(a - vec3(0.0, 0.0, 0.0),
+        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), abs(sin(iGlobalTime * 2.0))),
+        1.0
+    ), 0.25);
+
+
+    result -= 0.15;
 
     return result;
 }
@@ -200,17 +263,23 @@ void mainImage (out vec4 color, in vec2 p) {
     p = 2.0 * p - 1.0;
     p.x *= iResolution.x / iResolution.y;
 
-    vec3 cameraPosition = vec3(0.0, 2.0, 5.0);
+    vec3 cameraPosition = vec3(0.0, 3.0, 7.0);
     vec3 rayDirection = normalize(vec3(p, -1.0));
 
-    float b = 3.14 * 2.0 - 0.5;
-    // rayDirection.zy *= rotate(b);
-    // cameraPosition.zy *= rotate(b);
-    // rayDirection.zy *= rotate(b + sin(iGlobalTime * 0.25));
-    // cameraPosition.zy *= rotate(b + sin(iGlobalTime * 0.25));
+/*    mat2 b = rotate(3.14 * 2.0);
+    rayDirection.xz *= b;
+    cameraPosition.xz *= b;*/
 
-    // rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
-    // cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
+    float b = 3.14 * 2.0 - 0.5;
+/*    rayDirection.zy *= rotate(b);
+    cameraPosition.zy *= rotate(b);*/
+/*    rayDirection.zy *= rotate(b + sin(iGlobalTime * 0.25));
+    cameraPosition.zy *= rotate(b + sin(iGlobalTime * 0.25));*/
+
+/*    rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
+    cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));*/
+    rayDirection.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
+    cameraPosition.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
 
     float distance = intersect(cameraPosition, rayDirection);
 
@@ -231,7 +300,7 @@ void mainImage (out vec4 color, in vec2 p) {
         vec3 halfVector = normalize(light + normal);
         col += material.specular * pow(max(dot(normal, halfVector), 0.0), 1024.0);
 
-        float attDistance = 10.0;
+        float attDistance = 15.0;
         float att = clamp(1.0 - length(light - p) / attDistance, 0.0, 1.0); att *= att;
         col *= att;
 
