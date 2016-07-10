@@ -52,6 +52,10 @@ float noise(vec3 x) {
                    mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 
+float roundBox( vec3 p, vec3 b, float r ) {
+  return length(max(abs(p)-b,0.0))-r;
+}
+
 float capsule(vec3 p, vec3 a, vec3 b, float r) {
     vec3 pa = p - a, ba = b - a;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
@@ -110,35 +114,33 @@ float finger(vec3 p, vec3 target, float fingerLength) {
             0.25 + length(p - target) * 0.1),
         0.25);
 
-    return finger - 0.05;
+    return finger - 0.2;
+}
+
+float thumbCalc(vec3 p, vec3 target, float fingerLength) {
+    float firstJointLength = 2.0 * fingerLength;
+    float secondJointLength = 1.65 * fingerLength;
+
+    vec2 height = solve(target.xy, firstJointLength, secondJointLength);
+    float depth = solve(target.xz, firstJointLength, secondJointLength).y;
+    depth = 0.0;
+
+    target.z = 0.0;
+
+    vec3 joint = vec3(height, depth);
+
+    float finger = smin(
+        capsule(p, vec3(0.0, 0.0, 0.0), joint, 0.25 + length(p - joint) * 0.25),
+        capsule(p, joint, target, 0.25 + length(p - target) * 0.1),
+        0.25);
+
+    return finger - 0.5;
 }
 
 float map(vec3 p) {
-    float result = p.y + 1.5;
-
-/*    result = min(result, finger(p - vec3(-0.5, 2.0, 0.0), vec3(
-        0.5,
-        -1.25,
-        2.0
-    )));
-    result = min(result, finger(p - vec3(-0.25, 3.5, 0.0), vec3(
-        0.5,
-        -1.55,
-        2.0
-    )));
-    result = min(result, finger(p - vec3(0.0, 5.0, 0.0), vec3(
-        1.5 - mod(iGlobalTime * 2.0, 4.0) * 0.25,
-        -1.75,
-        2.75
-    )));
-    result = min(result, finger(p - vec3(0.0, 6.5, -0.25), vec3(
-        1.5 - mod(iGlobalTime, 2.0) * 0.5,
-        -1.75,
-        2.0
-    )));*/
+    float result = 10000.0;
 
     // p.yz *= rotate(-abs(sin(iGlobalTime * 0.1)) * 3.14);
-
 
     vec3 d = p;
     d.zy *= rotate(3.1);
@@ -168,8 +170,40 @@ float map(vec3 p) {
         1.0
     ), 0.25);
 
+    //Palm
+    vec3 palm = p - vec3(2.5, 3.0, -1.0);
+    palm.xz *= rotate(-3.14 * 0.7);
 
-    result -= 0.15;
+    palm.z += sin(palm.y * 0.75 + 1.25) * 0.5;
+
+    result = smin(result, roundBox(palm, vec3(2.0, 3.0 - palm.x * 0.2, 0.3), 0.5), 0.5);
+    result = smin(result, roundBox(palm - vec3(1.5, -2.0, 0.25), vec3(0.5, 0.15, -0.25), 1.25), 0.75);
+    result = smin(result, roundBox(palm - vec3(1.5, 0.5, 1.25), vec3(0.5, 0.15, -0.55), 1.25), 0.75);
+
+
+    // Thumb
+    vec3 thumb = p - vec3(3.0, 5.0, -3.0);
+    result = smin(result, length(thumb) - 1.75, 0.5);
+
+    thumb.zy *= rotate(3.14 * 1.75);
+    result = smin(result, thumbCalc(thumb - vec3(-2.0, 0.0, 1.0),
+        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), abs(sin(iGlobalTime * 2.0))),
+        1.0
+    ), 1.0);
+
+
+    // Arm
+    vec3 arm = p;
+    arm.xz *= rotate(-3.14 * 0.7);
+    arm.z *= 1.5;
+    result = smin(result, capsule(arm, vec3(6.5, 3.0, -0.5), vec3(15.0, 3.0, 0.0), 1.5 + arm.x * 0.2), 1.0);
+
+    // Texture
+    vec3 ext = repeat(p, vec3(0.15));
+    result = smin(result, max(result - 0.01, length(ext) - 0.001), 0.1);
+
+    // Ground
+    result = min(result, p.y + 1.5);
 
     return result;
 }
@@ -263,7 +297,7 @@ void mainImage (out vec4 color, in vec2 p) {
     p = 2.0 * p - 1.0;
     p.x *= iResolution.x / iResolution.y;
 
-    vec3 cameraPosition = vec3(0.0, 3.0, 7.0);
+    vec3 cameraPosition = vec3(0.0, 4.0, 7.0);
     vec3 rayDirection = normalize(vec3(p, -1.0));
 
 /*    mat2 b = rotate(3.14 * 2.0);
