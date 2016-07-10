@@ -140,7 +140,9 @@ float thumbCalc(vec3 p, vec3 target, float fingerLength) {
 float map(vec3 p) {
     float result = 10000.0;
 
-    // p.yz *= rotate(-abs(sin(iGlobalTime * 0.1)) * 3.14);
+    vec3 ground = p;
+
+   // p.yz *= rotate(-abs(sin(iGlobalTime * 0.1)) * 3.14);
 
     vec3 d = p;
     d.zy *= rotate(3.1);
@@ -196,14 +198,14 @@ float map(vec3 p) {
     vec3 arm = p;
     arm.xz *= rotate(-3.14 * 0.7);
     arm.z *= 1.5;
-    result = smin(result, capsule(arm, vec3(6.5, 3.0, -0.5), vec3(15.0, 3.0, 0.0), 1.5 + arm.x * 0.2), 1.0);
+    result = smin(result, capsule(arm, vec3(6.5, 3.0, -0.5), vec3(15.0, 3.0, 0.0), 1.5 + arm.x * 0.2), 1.5);
 
     // Texture
     vec3 ext = repeat(p, vec3(0.15));
     result = smin(result, max(result - 0.01, length(ext) - 0.001), 0.1);
 
     // Ground
-    result = min(result, p.y + 1.5);
+    result = min(result, ground.y + 1.5);
 
     return result;
 }
@@ -300,18 +302,18 @@ void mainImage (out vec4 color, in vec2 p) {
     vec3 cameraPosition = vec3(0.0, 4.0, 7.0);
     vec3 rayDirection = normalize(vec3(p, -1.0));
 
-/*    mat2 b = rotate(3.14 * 2.0);
-    rayDirection.xz *= b;
-    cameraPosition.xz *= b;*/
+    // mat2 b = rotate(3.14 * 2.0);
+    // rayDirection.xz *= b;
+    // cameraPosition.xz *= b;
 
     float b = 3.14 * 2.0 - 0.5;
-/*    rayDirection.zy *= rotate(b);
-    cameraPosition.zy *= rotate(b);*/
-/*    rayDirection.zy *= rotate(b + sin(iGlobalTime * 0.25));
-    cameraPosition.zy *= rotate(b + sin(iGlobalTime * 0.25));*/
+    // rayDirection.zy *= rotate(b);
+    // cameraPosition.zy *= rotate(b);*/
+    // rayDirection.zy *= rotate(b + sin(iGlobalTime * 0.25));
+    // cameraPosition.zy *= rotate(b + sin(iGlobalTime * 0.25));
+    // rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
+    // cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
 
-/*    rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
-    cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));*/
     rayDirection.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
     cameraPosition.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
 
