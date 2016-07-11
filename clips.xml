@@ -35,13 +35,13 @@
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="shroom" start="3582" length="1106" time="59.5666656">
+<clip src="shroom" start="3582" length="1093" time="59.5666656">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="pickup" start="4688" length="1252" time="0">
+<clip src="pickup" start="4675" length="1252" time="0">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />

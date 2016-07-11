@@ -9,6 +9,26 @@ Material defaultMaterial = Material(
     vec3(2.7, 1.0, 0.95),
     vec3(1.0)
 );
+Material hatMaterial = Material(
+    vec3(0.5, 0.0, 0.0),
+    vec3(0.75, 0.5, 0.0),
+    vec3(1.0)
+);
+Material stemMaterial = Material(
+    vec3(0.0, 1.0, 0.0),
+    vec3(3.0, 1.25, 0.75),
+    vec3(1.0)
+);
+Material groundMaterial = Material(
+    vec3(0.0, 0.0, 1.0),
+    vec3(2.7, 1.0, 0.95),
+    vec3(1.0)
+);
+Material hatDotsMaterial = Material(
+    vec3(0.75),
+    vec3(0.35),
+    vec3(1.0)
+);
 
 float smin(float a, float b, float k) {
     float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
@@ -137,7 +157,7 @@ float thumbCalc(vec3 p, vec3 target, float fingerLength) {
     return finger - 0.5;
 }
 
-float map(vec3 p) {
+float hand(vec3 p) {
     float result = 10000.0;
 
     vec3 ground = p;
@@ -193,7 +213,6 @@ float map(vec3 p) {
         1.0
     ), 1.0);
 
-
     // Arm
     vec3 arm = p;
     arm.xz *= rotate(-3.14 * 0.7);
@@ -205,9 +224,104 @@ float map(vec3 p) {
     result = smin(result, max(result - 0.01, length(ext) - 0.001), 0.1);
 
     // Ground
-    result = min(result, ground.y + 1.5);
+    // result = min(result, ground.y + 1.5);
 
     return result;
+}
+
+const float shroomRotation = 4.5433;
+
+float ground(vec3 p) {
+    p.y = abs(p.y);
+
+    float waves = 25.0;
+    float ground = p.y + mix(sin(p.x * waves), sin(p.z * waves), 0.5) * 0.3;
+
+    ground += length(p) - 1.0;
+    ground *= 0.25;
+
+    ground = min(ground, p.y + mix(sin(p.x * waves), sin(p.z * waves), 0.5) * 0.05);
+
+    return ground;
+}
+
+float stem(vec3 p) {
+    p.y -= 0.5;
+
+    float stem = capsule(p, vec3(0.0), vec3(cos(shroomRotation) * 0.25, 1.0, sin(shroomRotation) * 0.25), 0.5);
+    stem += sin(p.y * 3.0 - 1.0) * 0.15;
+    stem += mix(sin(p.z * 50.0 + 2.0), sin(p.x * 50.0 + 2.0), 0.5) * 0.02;
+
+    return stem;
+}
+
+float hat(vec3 p) {
+    p.y -= 2.0;
+
+    p.z -= sin(shroomRotation) * 0.25;
+    p.x -= cos(shroomRotation) * 0.25;
+
+    float hat = length(p) - 0.75;
+    hat += p.y * 1.25;
+
+    hat = max(hat, -(p.y + 0.5));
+    hat = mix(hat, length(p) - 0.75, 0.2);
+
+    hat += mix(sin(p.z * 50.0), sin(p.x * 50.0), 0.5) * 0.01;
+
+    vec3 c = vec3(0.25);
+    p = mod(p, c) - c*0.5;
+
+    float dots = length(p) - 0.05;
+
+    hat += dots * 0.35;
+
+    vec3 q = repeat(p, vec3(0.05));
+    hat = smin(hat, max(hat, length(q) - 0.0001), 0.035);
+
+    return hat;
+}
+
+float hatDots(vec3 p) {
+    p.y -= 0.05;
+
+    float hat = hat(p);
+    hat -= 0.005;
+
+    p.y -= 1.75;
+
+    p.z -= sin(shroomRotation) * 0.25;
+    p.x -= cos(shroomRotation) * 0.25;
+
+    vec3 c = vec3(0.25);
+    p = mod(p, c) - c*0.5;
+
+
+    float dots = length(p) - 0.05;
+
+    dots = max(dots, hat);
+
+    return dots;
+}
+
+float map(vec3 p) {
+
+    vec3 shroomP = p - vec3(0.0, -1.0, 0.0);
+    float scale = 3.0;
+
+    shroomP /= scale;
+
+    float shroom = min(min(hat(shroomP), stem(shroomP)), min(ground(shroomP), hatDots(shroomP)));
+    shroom *= scale;
+
+    vec3 farawayPosition = vec3(10.0, 15.0, 20.0);
+    vec3 holdingPosition = vec3(-0.6, 0.75, 1.55);
+    vec3 handPosition = p - mix(farawayPosition, holdingPosition, mod(iGlobalTime * 0.25, 1.0));
+
+    handPosition.yz *= rotate(mix(91.0, 92.1, mod(iGlobalTime * 0.25, 1.0)));
+    handPosition.z *= -1.0;
+
+    return min(hand(handPosition), shroom);
 }
 
 bool isSameDistance(float distanceA, float distanceB, float eps) {
@@ -219,11 +333,27 @@ bool isSameDistance(float distanceA, float distanceB) {
 }
 
 Material getMaterial(vec3 p) {
-    return defaultMaterial;
-    // float distance = map(p);
-    // if (isSameDistance(distance, dirt(p), 0.25)) {
-    //     return dirtMaterial;
-    // }
+    float distance = map(p);
+
+    vec3 shroomP = p - vec3(0.0, -1.0, 0.0);
+    float scale = 3.0;
+    shroomP /= scale;
+
+    if (isSameDistance(distance, hat(shroomP) * scale)) {
+        return hatMaterial;
+    }
+    else if (isSameDistance(distance, stem(shroomP) * scale)) {
+        return stemMaterial;
+    }
+    else if (isSameDistance(distance, ground(shroomP) * scale)) {
+        return groundMaterial;
+    }
+    else if (isSameDistance(distance, hatDots(shroomP) * scale)) {
+        return hatDotsMaterial;
+    }
+    else {
+        return defaultMaterial;
+    }
 }
 
 vec3 getNormal(vec3 p) {
@@ -292,14 +422,14 @@ float render2D(vec2 p) {
     return result;
 }
 
-vec3 light = normalize(vec3(10.0, 20.0, 2.0));
+vec3 light = normalize(vec3(-10.0, 20.0, 2.0));
 
 void mainImage (out vec4 color, in vec2 p) {
     p /= iResolution.xy;
     p = 2.0 * p - 1.0;
     p.x *= iResolution.x / iResolution.y;
 
-    vec3 cameraPosition = vec3(0.0, 4.0, 7.0);
+    vec3 cameraPosition = vec3(0.0, 4.0, 7.5);
     vec3 rayDirection = normalize(vec3(p, -1.0));
 
     // mat2 b = rotate(3.14 * 2.0);
@@ -314,8 +444,12 @@ void mainImage (out vec4 color, in vec2 p) {
     // rayDirection.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
     // cameraPosition.xy *= rotate(b - 1.0 + sin(iGlobalTime * 0.25));
 
-    rayDirection.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
-    cameraPosition.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
+    // rayDirection.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
+    // cameraPosition.xz *= rotate(sin(iGlobalTime * 0.25) * 3.14);
+    // rayDirection.xz *= rotate(iGlobalTime * 3.14);
+    // cameraPosition.xz *= rotate(iGlobalTime * 3.14);
+    rayDirection.xz *= rotate(79.15 * 3.14 + sin(iGlobalTime) * 0.025);
+    cameraPosition.xz *= rotate(79.15 * 3.14 + sin(iGlobalTime) * 0.025);
 
     float distance = intersect(cameraPosition, rayDirection);
 
