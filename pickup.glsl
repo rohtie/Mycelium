@@ -106,6 +106,8 @@ vec2 solve(vec2 p, float upperLimbLength, float lowerLimbLength) {
     return q + q.yx * vec2(-1.0, 1.0) * sqrt(s);
 }
 
+float time = mod(iGlobalTime, 20.0);
+
 float finger(vec3 p, vec3 target, float fingerLength) {
     float firstJointLength = 2.0 * fingerLength;
     float secondJointLength = 1.65 * fingerLength;
@@ -164,31 +166,37 @@ float hand(vec3 p) {
 
    // p.yz *= rotate(-abs(sin(iGlobalTime * 0.1)) * 3.14);
 
+   float closedFactor = 0.0;
+
+   if (time >= 3.75) {
+        closedFactor = clamp(time - 3.75, 0.0, 1.0);
+   }
+
     vec3 d = p;
     d.zy *= rotate(3.1);
     result = smin(result, finger(d - vec3(0.0, 0.0, -6.0),
-        mix(vec3(-4.3, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        mix(vec3(-4.3, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), closedFactor),
         1.2
     ), 0.25);
 
     vec3 c = p;
     c.zy *= rotate(2.85);
     result = smin(result, finger(c - vec3(0.0, 0.0, -4.0),
-        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), clamp(closedFactor, 0.0, 0.5)),
         1.35
     ), 0.25);
 
     vec3 b = p;
     b.zy *= rotate(2.75);
     result = smin(result, finger(b - vec3(0.0, 0.0, -2.0),
-        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), abs(sin(iGlobalTime * 2.0))),
+        mix(vec3(-4.55, 0.0, 0.0), vec3(-2.5, 0.0, 0.0), closedFactor * 1.1),
         1.25
     ), 0.25);
 
     vec3 a = p;
     a.zy *= rotate(2.5);
     result = smin(result, finger(a - vec3(0.0, 0.0, 0.0),
-        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), abs(sin(iGlobalTime * 2.0))),
+        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), closedFactor),
         1.0
     ), 0.25);
 
@@ -209,7 +217,7 @@ float hand(vec3 p) {
 
     thumb.zy *= rotate(3.14 * 1.75);
     result = smin(result, thumbCalc(thumb - vec3(-2.0, 0.0, 1.0),
-        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), abs(sin(iGlobalTime * 2.0))),
+        mix(vec3(-3.65, 0.0, 0.0), vec3(-2.5, 0.0, 3.65), closedFactor),
         1.0
     ), 1.0);
 
@@ -241,6 +249,8 @@ float ground(vec3 p) {
     ground *= 0.25;
 
     ground = min(ground, p.y + mix(sin(p.x * waves), sin(p.z * waves), 0.5) * 0.05);
+
+    ground = max(ground, -(length(p - vec3(0.0, 0.4, 0.0)) - 0.65));
 
     return ground;
 }
@@ -307,18 +317,58 @@ float hatDots(vec3 p) {
 float map(vec3 p) {
 
     vec3 shroomP = p - vec3(0.0, -1.0, 0.0);
-    float scale = 3.0;
+    float scale = 2.75;
 
     shroomP /= scale;
+    vec3 groundP = shroomP;
 
-    float shroom = min(min(hat(shroomP), stem(shroomP)), min(ground(shroomP), hatDots(shroomP)));
+    vec3 positionA;
+    vec3 positionB;
+
+    float rotationA;
+    float rotationB;
+
+    float factor;
+
+    if (time <= 4.0) {
+        positionA = vec3(10.0, 15.0, 20.0);
+        positionB = vec3(0.8, 0.05, 0.6);
+
+        rotationA = 91.0;
+        rotationB = 92.55;
+
+        factor = clamp(time * 0.25, 0.0, 1.0);
+    }
+    else if (time <= 5.5) {
+        positionB = vec3(0.8, 0.05, 0.6);
+        rotationB = 92.55;
+
+        factor = 1.0;
+    }
+    else if (time > 5.5) {
+        positionA = vec3(0.8, 0.05, 0.6);
+        positionB = vec3(10.0, 40.0, 20.0);
+
+        rotationA = 92.55;
+        rotationB = 95.0;
+
+        factor = clamp((time - 5.5) * 0.25, 0.0, 1.0);
+
+        shroomP -= mix(positionA, positionB, factor) / scale;
+        shroomP.yz *= rotate(mix(rotationA, rotationB, factor));
+        shroomP.xz *= rotate(-3.14 * 1.7);
+        shroomP.yz *= rotate(-3.14 * 0.45);
+        shroomP.z *= -1.0;
+        shroomP -= vec3(0.4, 0.0, 0.0);
+    }
+
+    float shroom = min(min(hat(shroomP), stem(shroomP)), hatDots(shroomP));
+    shroom = min(shroom, ground(groundP));
     shroom *= scale;
 
-    vec3 farawayPosition = vec3(10.0, 15.0, 20.0);
-    vec3 holdingPosition = vec3(-0.6, 0.75, 1.55);
-    vec3 handPosition = p - mix(farawayPosition, holdingPosition, mod(iGlobalTime * 0.25, 1.0));
+    vec3 handPosition = p - mix(positionA, positionB, factor);
 
-    handPosition.yz *= rotate(mix(91.0, 92.1, mod(iGlobalTime * 0.25, 1.0)));
+    handPosition.yz *= rotate(mix(rotationA, rotationB, factor));
     handPosition.z *= -1.0;
 
     return min(hand(handPosition), shroom);
@@ -336,8 +386,27 @@ Material getMaterial(vec3 p) {
     float distance = map(p);
 
     vec3 shroomP = p - vec3(0.0, -1.0, 0.0);
-    float scale = 3.0;
+    float scale = 2.75;
     shroomP /= scale;
+
+    vec3 groundP = shroomP;
+
+    if (time > 5.5) {
+        vec3 positionA = vec3(0.8, 0.05, 0.6);
+        vec3 positionB = vec3(10.0, 40.0, 20.0);
+
+        float rotationA = 92.55;
+        float rotationB = 95.0;
+
+        float factor = clamp((time - 5.5) * 0.25, 0.0, 1.0);
+
+        shroomP -= mix(positionA, positionB, factor) / scale;
+        shroomP.yz *= rotate(mix(rotationA, rotationB, factor));
+        shroomP.xz *= rotate(-3.14 * 1.7);
+        shroomP.yz *= rotate(-3.14 * 0.45);
+        shroomP.z *= -1.0;
+        shroomP -= vec3(0.4, 0.0, 0.0);
+    }
 
     if (isSameDistance(distance, hat(shroomP) * scale)) {
         return hatMaterial;
@@ -345,7 +414,7 @@ Material getMaterial(vec3 p) {
     else if (isSameDistance(distance, stem(shroomP) * scale)) {
         return stemMaterial;
     }
-    else if (isSameDistance(distance, ground(shroomP) * scale)) {
+    else if (isSameDistance(distance, ground(groundP) * scale)) {
         return groundMaterial;
     }
     else if (isSameDistance(distance, hatDots(shroomP) * scale)) {
@@ -471,10 +540,19 @@ void mainImage (out vec4 color, in vec2 p) {
         col += material.specular * pow(max(dot(normal, halfVector), 0.0), 1024.0);
 
         float attDistance = 15.0;
+
+        if (time > 7.75) {
+            attDistance -= (time - 7.75) * 6.0;
+        }
+
         float att = clamp(1.0 - length(light - p) / attDistance, 0.0, 1.0); att *= att;
         col *= att;
 
         col *= vec3(smoothstep(0.25, 0.75, map(p + light))) + 0.5;
+    }
+
+    if (time > 7.75) {
+        col = mix(col, vec3(0.0), smoothstep(0.0, 1.0, (time - 7.75) / 2.25));
     }
 
     color.rgb = col;

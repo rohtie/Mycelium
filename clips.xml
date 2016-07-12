@@ -41,7 +41,7 @@
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
 </clip>
-<clip src="pickup" start="4675" length="1252" time="0">
+<clip src="pickup" start="4675" length="651" time="-2.08333349">
 	<iChannel src="sound" filter="" />
 	<iChannel src="" filter="" />
 	<iChannel src="" filter="" />
