@@ -119,11 +119,11 @@ float shrooms(vec3 p) {
     }
 
     // Very interesting ghost effect
-    if (iGlobalTime < 37.0) {
-        return shrooms + 1.0;
-    }
+    // if (iGlobalTime < 37.0) {
+    //     return shrooms + 1.0;
+    // }
 
-    return shrooms + mod(iGlobalTime, 2.0);
+    return shrooms + mod(iGlobalTime, 2.0) / 5.0 - 0.05;
 
     shrooms = shrooms - smoothstep(0.0, 1.0, sin(iGlobalTime)) * 0.05;
 

@@ -91,7 +91,7 @@ float hyphae(vec3 p) {
 
     for (float i=0.0 + seed; i<=1.5 + seed; i+=0.1) {
         a = b;
-        b = b + (hash3(i) - mod(iGlobalTime * 0.1, 1.0) * 0.5) * 2.0;
+        b = b + (hash3(i) - mod(iGlobalTime * 0.1, 1.0) * 0.5) * 1.0;
 
         hyphae = smin(hyphae, capsule(p, a, b, 0.4), 0.1);
     }

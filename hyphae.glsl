@@ -78,7 +78,7 @@ float hyphaeExtensions(vec3 p) {
 float hyphae(vec3 p) {
     float seed = int(iGlobalTime * 10.0);
 
-    float movement = mod(iGlobalTime * 0.25, 1.0) * 5.0;
+    float movement = mod(iGlobalTime * 0.15, 1.0) * 5.0;
 
     p.xy += movement;
     p.z += movement * 0.5;
@@ -171,7 +171,7 @@ float render2D(vec2 p) {
 
     float seed = 95.0;
 
-    float movement = mod(iGlobalTime * 0.25, 1.0) * 5.0;
+    float movement = mod(iGlobalTime * 0.15, 1.0) * 5.0;
 
     for (float i = 0.0 + seed; i < 100.0 + seed; i += 2.0) {
         vec2 circleLocation = vec2(hash(i), hash(i + 1.0)) - 0.5;
